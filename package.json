@@ -1,0 +1,24 @@
+{
+  "name": "snowflake",
+  "version": "1.0.0",
+  "description": "雪花",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crazydogclone/snowflake.git"
+  },
+  "keywords": [
+    "nodejs",
+    "snowflake",
+    "javascript"
+  ],
+  "author": "crazy.d <lvnzForJob@163.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/crazydogclone/snowflake/issues"
+  },
+  "homepage": "https://github.com/crazydogclone/snowflake#readme"
+}
