@@ -1,7 +1,7 @@
 {
   "targets": [
     {
-      "target_name": "addon",
+      "target_name": "snowflake",
       "sources": [ "snowflake.c" ]
     }
   ]

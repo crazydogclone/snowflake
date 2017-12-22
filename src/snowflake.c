@@ -6,51 +6,97 @@
 #include <math.h>
 #include "./common.h"
 
-
-__int64_t twepoch = (__int64_t)1288834974657;
 //各个数据所在位偏移
-unsigned int workerIdBits = 5;
-unsigned int dataCenterIdBits = 5;
-unsigned int sequenceBits = 12;
+int workerIdBits = 5;
+int dataCenterIdBits = 5;
+int sequenceBits = 12;
 
-int maxWrokerId = 1;
-int maxDataCenterId = 1;
-int sequenceMask = 1;
+int maxWorkerId = -1;
+int maxDataCenterId = -1;
+int sequenceMask = -1;
 
 int workerIdShift, dataCenterIdShift, timestampLeftShift;
 
-__int64_t lastTimestamp = (__int64_t)0;
-__int64_t aux = (__int64_t)18014398509481983;
+uint64_t lastTimestamp = (uint64_t)0;
 
 unsigned int sequence = 0;
 
-// int timeGen(__int64_t* time){
-// 	struct timeval tv;
-// 	int res;
-// 	res = gettimeofday(&tv, NULL);
-// 	if(!!res){
-// 		*time = (__int64_t)tv.tv_sec*1000 + (__int64_t)tv.tv_usec/1000;
-// 	}
-// 	return res;
-// }
+ int timeGen(uint64_t* time){
+ 	struct timeval tv;
+ 	int res;
+ 	res = gettimeofday(&tv, NULL);
+ 	if(!res){
+ 		*time = (uint64_t)tv.tv_sec*(uint64_t)1000 + (uint64_t)tv.tv_usec/(uint64_t)1000;
+ 	}
+ 	return res;
+ }
 
-// __int64_t tilNextMillis(__int64_t lastTimestamp){
-// 	__int64_t timestamp;
-// 	timeGen(&timestamp);
-// 	while (timestamp <= lastTimestamp) {
-//     timeGen(&timestamp);
-//   }
-//   return timestamp;
-// }
+ uint64_t tilNextMillis(uint64_t* lastTimestamp){
+ 	uint64_t timestamp;
+ 	timeGen(&timestamp);
+ 	while (timestamp <= *lastTimestamp) {
+     timeGen(&timestamp);
+   }
+   return timestamp;
+ }
 
-// char* int64toa(__int64_t src, char* dest, int radix){
-// 	return _i64toa( src, dest, radix );
-// }
+char* i64toa(uint64_t src, char* dest, int dest_len){
+  int index = -1,value = 0;
+
+  for (int i = 0;i < dest_len;++i)
+  {
+    value = src % 10;
+    if(value != 0) index = dest_len - i - 1;
+    dest[dest_len - i - 1] = (char)('0' + src % 10);
+    src /= 10;
+  }
+
+  if(index != 0)
+  {
+    for (int i = index; i < dest_len; ++i)
+    {
+      *(dest + i - index) = *(dest + i);
+    }
+    *(dest + dest_len - index) = '\0';
+  }
+
+  if(index == -1)
+  {
+    *(dest) = '0';
+    *(dest + 1) = '\0';
+  }
+
+  return dest;
+}
+
+napi_value MaxWorkerId(napi_env env, napi_callback_info info) {
+  napi_value res;
+
+  if(maxWorkerId == -1){
+    maxWorkerId = pow(2, workerIdBits) - 1;
+  }
+
+  NAPI_CALL(env, napi_create_int32(env, maxWorkerId, &res));
+
+  return res;
+}
+
+napi_value MaxDataCenterId(napi_env env, napi_callback_info info) {
+  napi_value res;
+
+  if(maxDataCenterId == -1){
+    maxDataCenterId = pow(2, dataCenterIdBits) - 1;
+  }
+
+  NAPI_CALL(env, napi_create_int32(env, maxDataCenterId, &res));
+
+  return res;
+}
 
 napi_value init(napi_env env, napi_callback_info info) {
   napi_value res;
   
-  maxWrokerId = pow(2, workerIdBits) - 1;
+  maxWorkerId = pow(2, workerIdBits) - 1;
   maxDataCenterId = pow(2, dataCenterIdBits) - 1;
   sequenceMask = pow(2, sequenceBits) - 1;
 
@@ -64,51 +110,62 @@ napi_value init(napi_env env, napi_callback_info info) {
 }
 
 napi_value nextId(napi_env env, napi_callback_info info) {
-  napi_value arg[3], argThis, result;
-  size_t arg_len = 3;	
-  NAPI_CALL(env, napi_get_cb_info(env, info, &arg_len, &arg, &argThis, NULL));
-  int workerId,dataCenterId;
-  __int64_t timestamp ;
+    napi_value arg[2], argThis, result;
+    size_t arg_len = 2;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &arg_len, &arg, &argThis, NULL));
+    int workerId,dataCenterId;
+    uint64_t timestamp = (uint64_t)0;
 
-  NAPI_CALL(env, napi_get_value_int32(env, arg[0], &workerId));
-  NAPI_CALL(env, napi_get_value_int32(env, arg[1], &dataCenterId));
-  NAPI_CALL(env, napi_get_value_int64(env, arg[2], &timestamp));
+    NAPI_CALL(env, napi_get_value_int32(env, arg[0], &workerId));
+    NAPI_CALL(env, napi_get_value_int32(env, arg[1], &dataCenterId));
+//    NAPI_CALL(env, napi_get_value_int64(env, arg[2], &timestamp));
 
-  //timeGen(&timestamp);
-  if(lastTimestamp == timestamp){
-  	sequence = (sequence + 1) & sequenceMask;
-  	if(sequence == 0){
-  		//timestamp = tilNextMillis(lastTimestamp);
-      NAPI_CALL(env, napi_create_int64(env, -1, &result));
-      return result;
-  	}
-  }else{
-  	sequence = 0;
-  }
+    timeGen(&timestamp);
+    if(lastTimestamp == timestamp){
+    	sequence = (sequence + 1) & sequenceMask;
+    	if(sequence == 0){
+    	    timestamp = tilNextMillis(&lastTimestamp);
+//        NAPI_CALL(env, napi_create_int64(env, -1, &result));
+//        return result;
+    	}
+    }else{
+    	sequence = 0;
+    }
 
-  if (timestamp < lastTimestamp) {
-    napi_throw_error(env, NULL, "Clock moved backwards.");
-  }
+    if (timestamp < lastTimestamp) {
+      napi_throw_error(env, NULL, "Clock moved backwards.");
+    }
 
-  lastTimestamp = timestamp;
+    lastTimestamp = timestamp;
 
-  __int64_t i64nextId = ((timestamp) << timestampLeftShift | (dataCenterId << dataCenterIdShift) |
-  	(workerId << workerIdShift) | sequence);
+    uint64_t i64nextId = ((timestamp) << timestampLeftShift | (dataCenterId << dataCenterIdShift) |
+    	(workerId << workerIdShift) | sequence);
 
-  //__int64_t i64nextId = ((timestamp) << timestampLeftShift);
+    char res[20] = "\0";
+    i64toa(i64nextId, res, 19);
 
-  i64nextId = (i64nextId & aux);
+//    NAPI_CALL(env, napi_create_object(env, &result));
+//
+//    napi_value int64, string;
+//
+//    NAPI_CALL(env, napi_create_int64(env, i64nextId, &int64));
+//    NAPI_CALL(env, napi_create_string_utf8(env, res, NAPI_AUTO_LENGTH, &string));
+//
+//    NAPI_CALL(env, napi_set_named_property(env, result, "int64", int64));
+//    NAPI_CALL(env, napi_set_named_property(env, result, "string", string));
 
-  NAPI_CALL(env, napi_create_int64(env, i64nextId, &result));
+    NAPI_CALL(env, napi_create_string_utf8(env, res, NAPI_AUTO_LENGTH, &result));
 
-  return result;
+    return result;
 }
 
 
 napi_value Init(napi_env env, napi_value exports) {
   napi_property_descriptor desc[] = {
   		DECLARE_NAPI_PROPERTY("nextId", nextId),
-  		DECLARE_NAPI_PROPERTY("init", init)
+  		DECLARE_NAPI_PROPERTY("init", init),
+  		DECLARE_NAPI_PROPERTY("maxWorkerId", MaxWorkerId),
+  		DECLARE_NAPI_PROPERTY("maxDataCenterId", MaxDataCenterId)
   	};
   NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
   return exports;

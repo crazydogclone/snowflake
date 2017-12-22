@@ -2,10 +2,7 @@
   "name": "snowflake",
   "version": "1.0.0",
   "description": "雪花",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "main" : "lib/snowflake.node",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/crazydogclone/snowflake.git"
@@ -20,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/crazydogclone/snowflake/issues"
   },
-  "homepage": "https://github.com/crazydogclone/snowflake#readme"
+  "homepage": "https://github.com/crazydogclone/snowflake#readme",
+  "dependencies": {
+    "node-snowflake": "0.0.1"
+  }
 }
