@@ -1,5 +1,5 @@
 # snowflack
-雪花
+雪花算法
 
 
 #example
