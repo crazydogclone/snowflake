@@ -18,7 +18,5 @@
     "url": "https://github.com/crazydogclone/snowflake/issues"
   },
   "homepage": "https://github.com/crazydogclone/snowflake#readme",
-  "dependencies": {
-    "node-snowflake": "0.0.1"
-  }
+  "license": "MIT"
 }
