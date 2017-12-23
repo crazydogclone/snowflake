@@ -13,10 +13,9 @@
     "javascript"
   ],
   "author": "crazy.d <lvnzForJob@163.com>",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/crazydogclone/snowflake/issues"
   },
-  "homepage": "https://github.com/crazydogclone/snowflake#readme",
-  "license": "MIT"
+  "homepage": "https://github.com/crazydogclone/snowflake#readme"
 }
