@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "snowflake",
-      "sources": [ "snowflake.c" ]
+      "target_name": "snowflakeWin",
+      "sources": [ "snowflakeWin.c" ]
     }
   ]
 }
